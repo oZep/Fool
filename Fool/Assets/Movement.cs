@@ -1,94 +1,42 @@
+using System;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    [Header("Movement")]
-    public float movementSpeed = 5f;
-    public float mouseSensitivity = 2f;
-    public float jumpForce = 4f;
-
-
-    private CharacterController characterController;
-    private Transform cameraTransform;
-
-    private float verticalRotation = 0f;
-
-    public bool isJumping, isGrounded = false;
-    float rotationSpeed = 4;
-
-    float xaxis, yaxis;
-
-    private void Start()
-    {
-        characterController = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-        cameraTransform = Camera.main.transform;
-    }
-
-    private void FixedUpdate()
-    {
-        xaxis = Input.GetAxis("Vertical");
-        isJumping = Input.GetKeyDown(KeyCode.Space);
-
-        if (isJumping && isGrounded)
-        {
-            Debug.Log(this.ToString() + " isJumping = " + isJumping);
-            // Simulate jump using CharacterController's Move method
-            characterController.Move(Vector3.up * jumpForce);
-            isGrounded = false; // Update grounded status
-        }
-
-
-        if ((Input.GetAxis("Vertical") != 0f || Input.GetAxis("Horizontal") != 0f) && !isJumping && isGrounded)
-        {
-            if (Input.GetAxis("Vertical") >= 0)
-                transform.Rotate(new Vector3(0, xaxis * rotationSpeed, 0));
-            else
-                transform.Rotate(new Vector3(0, -xaxis * rotationSpeed, 0));
-
-        }
-    }
-
-
-    void OnCollisionEnter(Collision collision)
-    {
-        Debug.Log("Entered");
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
-    }
-
-    void OnCollisionExit(Collision collision)
-    {
-        Debug.Log("Exited");
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = false;
-        }
-    }
+    public CharacterController controller;
+    public float speed = 12f;
+    public float gravity = -18f;
+    public Transform groundCheck;
+    public float groundDistance = 0.4f;
+    public float jump = 3f;
+    public LayerMask groundMask;
+    Vector3 velocity;
+    bool isGrounded;
 
     private void Update()
     {
-        // Player Movement
-        float xaxis = Input.GetAxis("Horizontal");
-        float yaxis = Input.GetAxis("Vertical");
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        if(isGrounded && velocity.y < 0 )
+        {
+            velocity.y = 0f;
+        }
 
-        Vector3 moveDirection = transform.right * xaxis + transform.forward * yaxis;
-        moveDirection.y = 0f; // Ensure the player stays grounded
-        moveDirection.Normalize(); // Normalize the direction to avoid faster movement diagonally
 
-        characterController.SimpleMove(moveDirection * movementSpeed);
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+        Vector3 move = transform.right * x + transform.forward * z;
 
-        // Mouse Look
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        controller.Move(move * speed * Time.deltaTime);
 
-        verticalRotation -= mouseY;
-        verticalRotation = Mathf.Clamp(verticalRotation, -90f, 90f);
+        if(Input.GetButtonDown("Jump") && isGrounded)
+        {
+            velocity.y = MathF.Sqrt(jump * -2f * gravity);
+        }
 
-        cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
-        transform.Rotate(Vector3.up * mouseX);
+        velocity.y += gravity * Time.deltaTime;
+
+        controller.Move(velocity * Time.deltaTime);
+
+
     }
 }
