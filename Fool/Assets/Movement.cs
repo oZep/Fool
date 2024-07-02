@@ -5,7 +5,7 @@ public class Movement : MonoBehaviour
 {
     public CharacterController controller;
     public float speed = 12f;
-    public float gravity = -18f;
+    public float gravity = -9.81f;
     public Transform groundCheck;
     public float groundDistance = 0.4f;
     public float jump = 3f;
@@ -18,7 +18,7 @@ public class Movement : MonoBehaviour
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
         if(isGrounded && velocity.y < 0 )
         {
-            velocity.y = 0f;
+            velocity.y = -2f;
         }
 
 
@@ -30,6 +30,7 @@ public class Movement : MonoBehaviour
 
         if(Input.GetButtonDown("Jump") && isGrounded)
         {
+            Console.Write("Jump");
             velocity.y = MathF.Sqrt(jump * -2f * gravity);
         }
 
